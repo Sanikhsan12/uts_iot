@@ -61,8 +61,8 @@ def get_sensor_data():
         querry1 = "SELECT id, suhu, humidity, lux, timestamp FROM data_sensor WHERE suhu = (SELECT MAX(suhu) FROM data_sensor) AND humidity = (SELECT MAX(humidity) FROM data_sensor)"
         cursor.execute(querry1)
         max_rows = cursor.fetchall()
-        output_json['nilai_suhu_max_humid_max'] = [format_row(row) for row in max_rows] # <-- Ganti ke []
-
+        output_json['nilai_suhu_max_humid_max'] = [format_row(row) for row in max_rows]
+        
         # ! month year max
         querry2 = "SELECT DISTINCT CONCAT(MONTH(timestamp), '-', YEAR(timestamp)) AS month_year FROM data_sensor WHERE suhu = (SELECT MAX(suhu) FROM data_sensor) AND humidity = (SELECT MAX(humidity) FROM data_sensor)"
         cursor.execute(querry2)
