@@ -1,4 +1,4 @@
-db_config = {
+db = {
     'host': 'localhost',
     'port': 3307,
     'user': 'root',
