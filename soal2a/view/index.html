@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Sensor UTS</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f7f6;
+        color: #333;
+      }
+      h1 {
+        color: #0056b3;
+        text-align: center;
+      }
+      .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+        background-color: #fafafa;
+      }
+      .card h3 {
+        margin-top: 0;
+        color: #007bff;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 8px;
+      }
+      .stats p {
+        font-size: 1.1em;
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0;
+      }
+      .stats span {
+        font-weight: bold;
+        color: #000;
+        background-color: #e9ecef;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+      .list-item {
+        border-bottom: 1px dashed #ccc;
+        padding: 10px 0;
+        font-size: 0.95em;
+      }
+      .list-item:last-child {
+        border-bottom: none;
+      }
+      #loading {
+        text-align: center;
+        font-weight: bold;
+        color: #555;
+        font-size: 1.2em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Dashboard Sensor Hidroponik</h1>
+
+      <div class="card stats">
+        <h3>Statistik Suhu</h3>
+        <p>Suhu Maksimal: <span id="suhu-max">...</span></p>
+        <p>Suhu Minimal: <span id="suhu-min">...</span></p>
+        <p>Suhu Rata-rata: <span id="suhu-rata">...</span></p>
+        <p id="loading">Memuat data...</p>
+      </div>
+
+      <div class="card">
+        <h3>Data Saat Suhu & Kelembapan Maksimal</h3>
+        <div id="list-max-data"></div>
+      </div>
+
+      <div class="card">
+        <h3>Bulan & Tahun Data Maksimal</h3>
+        <div id="list-month-year"></div>
+      </div>
+    </div>
+
+    <script>
+      // URL API Backend Flask Anda
+      const API_URL = "http://127.0.0.1:5000/api/sensor-data";
+
+      // Panggil fungsi fetchData saat halaman selesai dimuat
+      document.addEventListener("DOMContentLoaded", fetchData);
+
+      async function fetchData() {
+        const loadingEl = document.getElementById("loading");
+
+        try {
+          // 1. Ambil (fetch) data dari Backend
+          const response = await fetch(API_URL);
+
+          // Cek jika server tidak merespons (error 404, 500, dll)
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          // 2. PARSING JSON:
+          // Mengubah respons mentah menjadi objek JavaScript (JSON)
+          const data = await response.json();
+
+          // Jika berhasil, sembunyikan pesan "Memuat data..."
+          loadingEl.style.display = "none";
+
+          // 3. MENAMPILKAN HASIL PARSING KE UI (User Interface)
+
+          // a. Menampilkan data statistik (suhumax, suhumin, suhurata)
+          document.getElementById("suhu-max").innerText = data.suhumax + " °C";
+          document.getElementById("suhu-min").innerText = data.suhumin + " °C";
+          document.getElementById("suhu-rata").innerText =
+            data.suhurata + " °C";
+
+          // b. Menampilkan list 'nilai_suhu_max_humid_max'
+          const listContainer = document.getElementById("list-max-data");
+          listContainer.innerHTML = ""; // Kosongkan kontainer
+
+          data.nilai_suhu_max_humid_max.forEach((item) => {
+            const el = document.createElement("div");
+            el.className = "list-item"; // Tambah class untuk styling
+            el.innerHTML = `
+                        <strong>ID: ${item.idx}</strong> (${item.timestamp})<br>
+                        Suhu: ${item.suhun}°C | Kelembapan: ${item.humid}% | Kecerahan: ${item.kecerahan} lux
+                    `;
+            listContainer.appendChild(el);
+          });
+
+          // c. Menampilkan list 'month_year_max'
+          const monthYearContainer = document.getElementById("list-month-year");
+          monthYearContainer.innerHTML = ""; // Kosongkan kontainer
+
+          data.month_year_max.forEach((item) => {
+            const el = document.createElement("div");
+            el.className = "list-item";
+            el.innerText = `Bulan-Tahun: ${item.month_year}`;
+            monthYearContainer.appendChild(el);
+          });
+        } catch (error) {
+          // Tangani jika terjadi error (misal: server Flask mati)
+          console.error("Gagal mengambil atau mem-parsing data:", error);
+          loadingEl.innerText = `Error: Gagal terhubung ke server. (${error.message})`;
+          loadingEl.style.color = "red";
+        }
+      }
+    </script>
+  </body>
+</html>
